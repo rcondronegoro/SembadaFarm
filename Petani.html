@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Petani Sembada Farm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { "sembada-green": "#14532d", "sembada-brown": "#78350f" },
+          },
+        },
+      };
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-[#F9FAF6]">
+    <!-- NAVBAR: sama dengan halaman 1, penanda aktif pindah ke Petani -->
+    <nav
+      class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-zinc-100"
+    >
+      <div
+        class="max-w-[1280px] mx-auto px-6 lg:px-8 h-[68px] flex items-center justify-between"
+      >
+        <a
+          href="index.html"
+          class="flex items-center gap-2 font-extrabold text-[18px] text-sembada-green"
+        >
+          <img
+            src="image/LogoSembada.jpg"
+            alt="Logo Sembada"
+            class="w-12 h-12 object-contain"
+          />
+          Sembada Farm
+        </a>
+        <ul class="hidden md:flex gap-8 text-[14px] font-medium text-zinc-700">
+          <li>
+            <a
+              href="index.html"
+              class="hover:text-sembada-green transition-colors"
+              >Beranda</a
+            >
+          </li>
+          <li>
+            <a
+              href="petani.html"
+              class="text-sembada-green border-b-2 border-sembada-green pb-1"
+              >Petani Sembada Farm</a
+            >
+          </li>
+          <li>
+            <a
+              href="index.html#penanaman"
+              class="hover:text-sembada-green transition-colors"
+              >Penanaman Saat ini</a
+            >
+          </li>
+          <li>
+            <a
+              href="index.html#produk"
+              class="hover:text-sembada-green transition-colors"
+              >Produk</a
+            >
+          </li>
+          <li>
+            <a
+              href="index.html#kontak"
+              class="hover:text-sembada-green transition-colors"
+              >Kontak</a
+            >
+          </li>
+        </ul>
+        <button id="menu-toggle" class="md:hidden text-2xl">☰</button>
+      </div>
+      <div
+        id="mobile-menu"
+        class="hidden md:hidden border-t bg-white absolute w-full top-[68px] shadow-lg"
+      >
+        <div class="px-6 py-5 flex flex-col gap-1">
+          <a
+            href="index.html"
+            class="py-3 px-3 rounded-lg hover:bg-zinc-50 text-zinc-700 font-medium"
+            >Beranda</a
+          >
+          <a
+            href="petani.html"
+            class="py-3 px-3 rounded-lg bg-[#F0F7F2] text-sembada-green font-bold"
+            >Petani Sembada Farm</a
+          >
+          <a
+            href="index.html#penanaman"
+            class="py-3 px-3 rounded-lg hover:bg-zinc-50 text-zinc-700 font-medium"
+            >Penanaman Saat ini</a
+          >
+          <a
+            href="index.html#produk"
+            class="py-3 px-3 rounded-lg hover:bg-zinc-50 text-zinc-700 font-medium"
+            >Produk</a
+          >
+          <a
+            href="index.html#kontak"
+            class="py-3 px-3 rounded-lg hover:bg-zinc-50 text-zinc-700 font-medium"
+            >Kontak</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- LATAR + PANEL PUTIH BERSUDUT BULAT (seperti snapshot) -->
+    <main
+      id="petani"
+      class="relative min-h-[calc(100vh-68px)] bg-[#F9FAF6] bg-cover bg-center"
+      style="background-image: url(&quot;image/LatarSayur.jpg&quot;)"
+    >
+      <div
+        class="absolute inset-0 bg-gradient-to-r from-[#F9FAF6]/10 via-[#F9FAF6]/50 to-[#F9FAF6]/90"
+      ></div>
+      <div class="relative max-w-5xl mx-auto px-4 sm:px-6 py-10 lg:py-14">
+        <div
+          class="bg-white/95 rounded-[28px] sm:rounded-[44px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.25)] ring-1 ring-black/5 p-6 sm:p-10"
+        >
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-sembada-green">
+            Petani Sembada Farm
+          </h1>
+          <p class="mt-2 text-zinc-600 max-w-xl">
+            Para pemimpin proyek yang menjalankan penanaman bersama kami, dan
+            batch yang sedang atau pernah mereka kerjakan.
+          </p>
+          <!-- kartu petani dibuat otomatis oleh script di bawah -->
+          <div id="daftar-petani" class="mt-8 divide-y divide-zinc-100">
+            <p class="py-10 text-zinc-500">Memuat data petani…</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      /* ===== PENGATURAN ===== */
+      // Link CSV tab "Publik" (Google Sheets → Publikasikan ke web)
+      const CSV_URL =
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgQ-4PaMfk81DDWG7TieJs8dJJG01rNUXTmvkEmLeu0YE7KUYfIeJ9cybslgZBbQDz_pVuEI91_Dux/pub?gid=116994059&single=true&output=csv";
+      // URL web app Apps Script (foto). Isi setelah deploy; kosong = tampil inisial nama
+      const FOTO_URL =
+        "https://script.google.com/macros/s/AKfycbzOVfQzQNsQDlj5n9TrRT6yJX612euWWsm7wOW1CCfquDu6NMISZ9AiKwCxvyayY6NC/exec";
+
+      /* ===== MENU MOBILE ===== */
+      const toggle = document.getElementById("menu-toggle");
+      const menu = document.getElementById("mobile-menu");
+      if (toggle && menu) {
+        toggle.addEventListener("click", () => menu.classList.toggle("hidden"));
+      }
+
+      /* ===== PEMBACA CSV (mendukung tanda kutip) ===== */
+      function parseCSV(text) {
+        const rows = [];
+        let row = [],
+          cell = "",
+          q = false;
+        for (let i = 0; i < text.length; i++) {
+          const c = text[i];
+          if (q) {
+            if (c === '"' && text[i + 1] === '"') {
+              cell += '"';
+              i++;
+            } else if (c === '"') q = false;
+            else cell += c;
+          } else if (c === '"') q = true;
+          else if (c === ",") {
+            row.push(cell);
+            cell = "";
+          } else if (c === "\n" || c === "\r") {
+            if (c === "\r" && text[i + 1] === "\n") i++;
+            row.push(cell);
+            rows.push(row);
+            row = [];
+            cell = "";
+          } else cell += c;
+        }
+        if (cell !== "" || row.length) {
+          row.push(cell);
+          rows.push(row);
+        }
+        const head = rows.shift().map((h) => h.trim());
+        return rows
+          .filter((r) => r.some((v) => v.trim() !== ""))
+          .map((r) =>
+            Object.fromEntries(head.map((h, i) => [h, (r[i] || "").trim()])),
+          );
+      }
+
+      /* ===== BANTUAN TAMPILAN ===== */
+      const esc = (s) =>
+        String(s).replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[m],
+        );
+      const angka = (v) =>
+        v && !isNaN(v) ? Number(v).toLocaleString("id-ID") : "-";
+      function tanggal(v) {
+        const m = (v || "").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); // format M/D/YYYY
+        if (!m) return v || "-";
+        return new Date(+m[3], +m[1] - 1, +m[2]).toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        });
+      }
+
+      /* ===== KELOMPOKKAN PER PEMIMPIN PROYEK ===== */
+      function kelompok(rows) {
+        const peta = new Map();
+        for (const r of rows) {
+          const nama = r["Pemimpin Proyek"];
+          if (!nama) continue;
+          if (nama.startsWith("⚠")) {
+            console.warn(
+              "Pemimpin tidak ditemukan untuk batch:",
+              r["Nama_Batch"],
+            );
+            continue;
+          }
+          if (!peta.has(nama)) peta.set(nama, { nama, foto: "", batch: [] });
+          const p = peta.get(nama);
+          if (!p.foto && r["Foto_Pemimpin"]) p.foto = r["Foto_Pemimpin"];
+          p.batch.push(r);
+        }
+        return [...peta.values()];
+      }
+
+      function kartu(p, fotoMap) {
+        const berkas = p.foto ? p.foto.split("/").pop() : "";
+        const url = berkas && fotoMap[berkas];
+        const inisial = esc(p.nama.charAt(0).toUpperCase());
+        const foto = url
+          ? `<img src="${esc(url)}" alt="Foto ${esc(p.nama)}" loading="lazy" referrerpolicy="no-referrer"
+               class="w-full h-full object-cover"
+               onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${inisial}',className:'text-4xl font-extrabold text-sembada-green'}))" />`
+          : `<span class="text-4xl font-extrabold text-sembada-green">${inisial}</span>`;
+        const batch = p.batch
+          .map(
+            (b) => `
+            <li class="py-3 first:pt-0 last:pb-0">
+              <p class="font-bold text-zinc-800">${esc(b["Nama_Batch"])}
+                <span class="font-medium text-zinc-500">· ${esc(b["Varietas"] || "-")}</span></p>
+              <p class="text-sm text-zinc-600 leading-6">
+                Lahan ${angka(b["Luas_Lahan"])} m² · ${angka(b["Jumlah_Tanaman"])} tanaman ·
+                mulai ${esc(tanggal(b["Tanggal_Mulai"]))}
+              </p>
+            </li>`,
+          )
+          .join("");
+        return `
+          <article class="py-8 first:pt-0 last:pb-0 flex flex-col sm:flex-row gap-6 sm:gap-8">
+            <div class="shrink-0 w-28 h-36 sm:w-32 sm:h-44 rounded-xl overflow-hidden bg-[#F0F7F2] flex items-center justify-center">
+              ${foto}
+            </div>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-xl font-extrabold text-sembada-green">${esc(p.nama)}</h2>
+              <p class="text-sm text-zinc-500 mb-4">Pemimpin proyek · ${p.batch.length} batch</p>
+              <ul class="divide-y divide-zinc-100">${batch}</ul>
+            </div>
+          </article>`;
+      }
+
+      /* ===== AMBIL DATA & TAMPILKAN ===== */
+      async function muat() {
+        const wadah = document.getElementById("daftar-petani");
+        try {
+          const [csv, foto] = await Promise.all([
+            fetch(CSV_URL).then((r) => {
+              if (!r.ok) throw new Error("CSV " + r.status);
+              return r.text();
+            }),
+            FOTO_URL
+              ? fetch(FOTO_URL)
+                  .then((r) => r.json())
+                  .catch(() => ({}))
+              : Promise.resolve({}),
+          ]);
+          const petani = kelompok(parseCSV(csv));
+          wadah.innerHTML = petani.length
+            ? petani.map((p) => kartu(p, foto)).join("")
+            : '<p class="py-10 text-zinc-500">Belum ada data petani.</p>';
+        } catch (e) {
+          console.error(e);
+          wadah.innerHTML =
+            '<p class="py-10 text-zinc-500">Data petani belum bisa dimuat. Silakan coba lagi nanti.</p>';
+        }
+      }
+      muat();
+    </script>
+  </body>
+</html>
