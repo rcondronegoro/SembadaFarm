@@ -25,96 +25,8 @@
     </style>
   </head>
   <body class="bg-[#F9FAF6]">
-    <!-- NAVBAR: sama dengan halaman 1, penanda aktif pindah ke Petani -->
-    <nav
-      class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-zinc-100"
-    >
-      <div
-        class="max-w-[1280px] mx-auto px-6 lg:px-8 h-[68px] flex items-center justify-between"
-      >
-        <a
-          href="index.html"
-          class="flex items-center gap-2 font-extrabold text-[18px] text-sembada-green"
-        >
-          <img
-            src="image/LogoSembada.jpg"
-            alt="Logo Sembada"
-            class="w-12 h-12 object-contain"
-          />
-          Sembada Farm
-        </a>
-        <ul class="hidden md:flex gap-8 text-[14px] font-medium text-zinc-700">
-          <li>
-            <a
-              href="index.html"
-              class="hover:text-sembada-green transition-colors"
-              >Beranda</a
-            >
-          </li>
-          <li>
-            <a
-              href="petani.html"
-              class="text-sembada-green border-b-2 border-sembada-green pb-1"
-              >Petani Sembada Farm</a
-            >
-          </li>
-          <li>
-            <a
-              href="index.html#penanaman"
-              class="hover:text-sembada-green transition-colors"
-              >Penanaman Saat ini</a
-            >
-          </li>
-          <li>
-            <a
-              href="index.html#produk"
-              class="hover:text-sembada-green transition-colors"
-              >Produk</a
-            >
-          </li>
-          <li>
-            <a
-              href="index.html#kontak"
-              class="hover:text-sembada-green transition-colors"
-              >Kontak</a
-            >
-          </li>
-        </ul>
-        <button id="menu-toggle" class="md:hidden text-2xl">☰</button>
-      </div>
-      <div
-        id="mobile-menu"
-        class="hidden md:hidden border-t bg-white absolute w-full top-[68px] shadow-lg"
-      >
-        <div class="px-6 py-5 flex flex-col gap-1">
-          <a
-            href="index.html"
-            class="py-3 px-3 rounded-lg hover:bg-zinc-50 text-zinc-700 font-medium"
-            >Beranda</a
-          >
-          <a
-            href="petani.html"
-            class="py-3 px-3 rounded-lg bg-[#F0F7F2] text-sembada-green font-bold"
-            >Petani Sembada Farm</a
-          >
-          <a
-            href="index.html#penanaman"
-            class="py-3 px-3 rounded-lg hover:bg-zinc-50 text-zinc-700 font-medium"
-            >Penanaman Saat ini</a
-          >
-          <a
-            href="index.html#produk"
-            class="py-3 px-3 rounded-lg hover:bg-zinc-50 text-zinc-700 font-medium"
-            >Produk</a
-          >
-          <a
-            href="index.html#kontak"
-            class="py-3 px-3 rounded-lg hover:bg-zinc-50 text-zinc-700 font-medium"
-            >Kontak</a
-          >
-        </div>
-      </div>
-    </nav>
+    <div id="navbar"></div>
+    <script src="navbar.js"></script>
 
     <!-- LATAR + PANEL PUTIH BERSUDUT BULAT (seperti snapshot) -->
     <main
@@ -152,13 +64,6 @@
       // URL web app Apps Script (foto). Isi setelah deploy; kosong = tampil inisial nama
       const FOTO_URL =
         "https://script.google.com/macros/s/AKfycbzOVfQzQNsQDlj5n9TrRT6yJX612euWWsm7wOW1CCfquDu6NMISZ9AiKwCxvyayY6NC/exec";
-
-      /* ===== MENU MOBILE ===== */
-      const toggle = document.getElementById("menu-toggle");
-      const menu = document.getElementById("mobile-menu");
-      if (toggle && menu) {
-        toggle.addEventListener("click", () => menu.classList.toggle("hidden"));
-      }
 
       /* ===== PEMBACA CSV (mendukung tanda kutip) ===== */
       function parseCSV(text) {
@@ -222,7 +127,21 @@
           year: "numeric",
         });
       }
-
+      function lencana(teks) {
+        const t = (teks || "").toLowerCase();
+        if (!t) return "";
+        let kelas = "bg-green-100 text-green-800",
+          titik = "bg-green-600 animate-pulse";
+        if (/selesai|panen/.test(t)) {
+          kelas = "bg-green-800 text-white";
+          titik = "bg-white";
+        } else if (/persiapan|pembibitan|semai|olah/.test(t)) {
+          kelas = "bg-amber-100 text-amber-800";
+          titik = "bg-amber-500";
+        }
+        return `<span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold ${kelas}">
+          <span class="w-1.5 h-1.5 rounded-full ${titik}"></span>${esc(teks)}</span>`;
+      }
       /* ===== KELOMPOKKAN PER PEMIMPIN PROYEK ===== */
       function kelompok(rows) {
         const peta = new Map();
@@ -253,16 +172,21 @@
                class="w-full h-full object-cover"
                onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${inisial}',className:'text-4xl font-extrabold text-sembada-green'}))" />`
           : `<span class="text-4xl font-extrabold text-sembada-green">${inisial}</span>`;
+        const selesai = (b) =>
+          /selesai|panen/i.test(b["Tahapan_Saat_Ini"] || "");
+        p.batch.sort((a, b) => selesai(a) - selesai(b));
         const batch = p.batch
           .map(
             (b) => `
             <li class="py-3 first:pt-0 last:pb-0">
               <p class="font-bold text-zinc-800">${esc(b["Nama_Batch"])}
-                <span class="font-medium text-zinc-500">· ${esc(b["Varietas"] || "-")}</span></p>
+                <span class="font-medium text-zinc-500">· ${esc(b["Varietas"] || "-")}</span>
+                ${lencana(b["Tahapan_Saat_Ini"])}</p>
               <p class="text-sm text-zinc-600 leading-6">
                 Lahan ${angka(b["Luas_Lahan"])} m² · ${angka(b["Jumlah_Tanaman"])} tanaman ·
                 mulai ${esc(tanggal(b["Tanggal_Mulai"]))}
               </p>
+
             </li>`,
           )
           .join("");
