@@ -3,7 +3,7 @@
 (function () {
   const MENU = [
     { label: "Beranda", href: "index.html" },
-    { label: "Petani Sembada Farm", href: "petani.html" },
+    { label: "Petani Sembada Farm", href: "Petani.html" },
     { label: "Penanaman Saat ini", href: "Penanaman.html" },
     { label: "Produk", href: "index.html#produk" },
     { label: "Kontak", href: "index.html#kontak" },
