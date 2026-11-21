@@ -41,96 +41,13 @@
     </style>
   </head>
   <body class="bg-[#F9FAF6]">
-    <nav
-      class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-zinc-100"
-    >
-      <div
-        class="max-w-[1280px] mx-auto px-6 lg:px-8 h-[68px] flex items-center justify-between"
-      >
-        <div
-          class="flex items-center gap-2 font-extrabold text-[18px] text-sembada-green"
-        >
-          <img
-            src="image/LogoSembada.jpg"
-            alt="Logo Sembada"
-            class="w-12 h-12 object-contain"
-          />
-          Sembada Farm
-        </div>
-        <ul class="hidden md:flex gap-8 text-[14px] font-medium text-zinc-700">
-          <li>
-            <a
-              href="index.html"
-              class="text-sembada-green border-b-2 border-sembada-green pb-1"
-              >Beranda</a
-            >
-          </li>
-          <li>
-            <a
-              href="Petani.html"
-              class="hover:text-sembada-green transition-colors"
-              >Petani Sembada Farm</a
-            >
-          </li>
-          <li>
-            <a
-              href="#penanaman"
-              class="hover:text-sembada-green transition-colors"
-              >Penanaman Saat ini</a
-            >
-          </li>
-          <li>
-            <a href="#produk" class="hover:text-sembada-green transition-colors"
-              >Produk</a
-            >
-          </li>
-          <li>
-            <a href="#kontak" class="hover:text-sembada-green transition-colors"
-              >Kontak</a
-            >
-          </li>
-        </ul>
-        <!-- CUMA INI YANG AKU UBAH: TAMBAH id="menu-toggle" -->
-        <button id="menu-toggle" class="md:hidden text-2xl">☰</button>
-      </div>
-      <!-- INI UDAH ADA DI FILE MAS, AKU BIARIN -->
-      <div
-        id="mobile-menu"
-        class="hidden md:hidden border-t bg-white absolute w-full top-[68px] shadow-lg"
-      >
-        <div class="px-6 py-5 flex flex-col gap-1">
-          <a
-            href="index.html"
-            class="py-3 px-3 rounded-lg bg-[#F0F7F2] text-sembada-green font-bold"
-            >Beranda</a
-          >
-          <a
-            href="Petani.html"
-            class="py-3 px-3 rounded-lg hover:bg-zinc-50 text-zinc-700 font-medium"
-            >Petani Sembada Farm</a
-          >
-          <a
-            href="#penanaman"
-            class="py-3 px-3 rounded-lg hover:bg-zinc-50 text-zinc-700 font-medium"
-            >Penanaman Saat ini</a
-          >
-          <a
-            href="#produk"
-            class="py-3 px-3 rounded-lg hover:bg-zinc-50 text-zinc-700 font-medium"
-            >Produk</a
-          >
-          <a
-            href="#kontak"
-            class="py-3 px-3 rounded-lg hover:bg-zinc-50 text-zinc-700 font-medium"
-            >Kontak</a
-          >
-        </div>
-      </div>
-    </nav>
+    <div id="navbar"></div>
+    <script src="navbar.js"></script>
+
     <section class="relative overflow-hidden">
       <div class="absolute inset-0">
         <!-- AKU BALIKIN SEPERTI ASLI MAS, TANPA OPACITY TIPIS -->
-        <img src="image/LatarSawah.jpg" class="w-full h-full object-cover" />
+        <img src="image/latarsawah.jpg" class="w-full h-full object-cover" />
         <div
           class="absolute inset-0 bg-gradient-to-r from-[#F9FAF6] via-[#F9FAF6]/80 to-transparent"
         ></div>
@@ -202,14 +119,6 @@
         </div>
       </div>
     </section>
-    <script>
-      const toggle = document.getElementById("menu-toggle");
-      const menu = document.getElementById("mobile-menu");
-      if (toggle && menu) {
-        toggle.addEventListener("click", () => {
-          menu.classList.toggle("hidden");
-        });
-      }
-    </script>
+    <script></script>
   </body>
 </html>
