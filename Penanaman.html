@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Penanaman Saat Ini – Sembada Farm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { "sembada-green": "#14532d", "sembada-brown": "#78350f" },
+          },
+        },
+      };
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-[#F9FAF6]">
+    <div id="navbar"></div>
+    <script src="navbar.js"></script>
+
+    <main
+      id="penanaman"
+      class="relative min-h-[calc(100vh-68px)] bg-[#F9FAF6] bg-cover bg-center"
+      style="background-image: url(&quot;image/LatarSayur.jpg&quot;)"
+    >
+      <div
+        class="absolute inset-0 bg-gradient-to-r from-[#F9FAF6]/10 via-[#F9FAF6]/50 to-[#F9FAF6]/90"
+      ></div>
+      <div class="relative max-w-5xl mx-auto px-4 sm:px-6 py-10 lg:py-14">
+        <div
+          class="bg-white/95 rounded-[28px] sm:rounded-[44px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.25)] ring-1 ring-black/5 p-6 sm:p-10"
+        >
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-sembada-green">
+            Penanaman Saat Ini
+          </h1>
+          <p class="mt-2 text-zinc-600 max-w-xl">
+            Tanaman yang sedang dikerjakan bersama para petani mitra, lengkap
+            dengan kabar terbaru dari lapangan.
+          </p>
+          <p id="diperbarui" class="mt-1 text-sm text-zinc-400"></p>
+          <div id="daftar" class="mt-8 divide-y divide-zinc-100">
+            <p class="py-10 text-zinc-500">Memuat data penanaman…</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      /* ===== PENGATURAN (sama dengan Petani.html) ===== */
+      const CSV_URL =
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgQ-4PaMfk81DDWG7TieJs8dJJG01rNUXTmvkEmLeu0YE7KUYfIeJ9cybslgZBbQDz_pVuEI91_Dux/pub?gid=116994059&single=true&output=csv";
+      const FOTO_URL =
+        "https://script.google.com/macros/s/AKfycbz6cKcU_92Jj6ajBAeZGQ55G6ahNFRdmKnGIWYZOaShbFqDEhUxAlAJIDCuh84yc_Fi/exec";
+
+      /* ===== PEMBACA CSV ===== */
+      function parseCSV(text) {
+        const rows = [];
+        let row = [],
+          cell = "",
+          q = false;
+        for (let i = 0; i < text.length; i++) {
+          const c = text[i];
+          if (q) {
+            if (c === '"' && text[i + 1] === '"') {
+              cell += '"';
+              i++;
+            } else if (c === '"') q = false;
+            else cell += c;
+          } else if (c === '"') q = true;
+          else if (c === ",") {
+            row.push(cell);
+            cell = "";
+          } else if (c === "\n" || c === "\r") {
+            if (c === "\r" && text[i + 1] === "\n") i++;
+            row.push(cell);
+            rows.push(row);
+            row = [];
+            cell = "";
+          } else cell += c;
+        }
+        if (cell !== "" || row.length) {
+          row.push(cell);
+          rows.push(row);
+        }
+        const head = rows.shift().map((h) => h.trim());
+        return rows
+          .filter((r) => r.some((v) => v.trim() !== ""))
+          .map((r) =>
+            Object.fromEntries(head.map((h, i) => [h, (r[i] || "").trim()])),
+          );
+      }
+
+      /* ===== BANTUAN ===== */
+      const esc = (s) =>
+        String(s ?? "").replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[m],
+        );
+      const angka = (v) =>
+        v && !isNaN(v) ? Number(v).toLocaleString("id-ID") : "-";
+      function tgl(v) {
+        // format M/D/YYYY dari Google Sheets
+        const m = (v || "").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        return m ? new Date(+m[3], +m[1] - 1, +m[2]) : null;
+      }
+      const fmt = (d) =>
+        d
+          ? d.toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })
+          : "-";
+      const selesai = (b) => /selesai|panen/i.test(b["Tahapan_Saat_Ini"] || "");
+
+      function lencana(teks) {
+        const t = (teks || "").toLowerCase();
+        if (!t) return "";
+        let kelas = "bg-green-100 text-green-800",
+          titik = "bg-green-600 animate-pulse";
+        if (/persiapan|pembibitan|semai|olah/.test(t)) {
+          kelas = "bg-amber-100 text-amber-800";
+          titik = "bg-amber-500";
+        }
+        return `<span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold ${kelas}">
+          <span class="w-1.5 h-1.5 rounded-full ${titik}"></span>${esc(teks)}</span>`;
+      }
+
+      function kartu(b, fotoMap) {
+        const nama = (b["Nama_Batch"] || "").replace(/^\d+\.\s*/, "");
+        const mulai = tgl(b["Tanggal_Mulai"]);
+        const hari = mulai
+          ? Math.max(0, Math.floor((Date.now() - mulai) / 864e5))
+          : null;
+        const berkas = (b["Status_Foto"] || "").split("/").pop();
+        const url = berkas && fotoMap[berkas];
+        const inisial = esc(nama.charAt(0).toUpperCase());
+        const foto = url
+          ? `<img src="${esc(url)}" alt="Kondisi terbaru ${esc(nama)}" loading="lazy" referrerpolicy="no-referrer"
+               class="w-full h-full object-cover"
+               onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${inisial}',className:'text-4xl font-extrabold text-sembada-green'}))" />`
+          : `<span class="text-4xl font-extrabold text-sembada-green">${inisial}</span>`;
+
+        const kabar =
+          b["Status_Judul"] || b["Status_Catatan"]
+            ? `<div class="mt-3 rounded-xl bg-[#F0F7F2] p-3">
+               <p class="text-xs font-bold text-sembada-green">Kabar terbaru · ${esc(fmt(tgl(b["Status_Tanggal"])))}${b["Status_Tahapan"] ? " · " + esc(b["Status_Tahapan"]) : ""}</p>
+               ${b["Status_Judul"] ? `<p class="mt-1 font-bold text-zinc-800 text-sm">${esc(b["Status_Judul"])}</p>` : ""}
+               ${b["Status_Catatan"] ? `<p class="mt-1 text-sm text-zinc-600 leading-6">${esc(b["Status_Catatan"])}</p>` : ""}
+             </div>`
+            : `<p class="mt-3 text-sm text-zinc-400">Belum ada kabar terbaru.</p>`;
+
+        return `
+          <article class="py-8 first:pt-0 last:pb-0 flex flex-col sm:flex-row gap-5 sm:gap-8">
+            <div class="shrink-0 w-full h-52 sm:w-48 sm:h-48 rounded-xl overflow-hidden bg-[#F0F7F2] flex items-center justify-center">${foto}</div>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-xl font-extrabold text-sembada-green">${esc(nama)} ${lencana(b["Tahapan_Saat_Ini"])}</h2>
+              <p class="text-sm text-zinc-500">${esc(b["Pemimpin Proyek"] || "")} · ${esc(b["Varietas"] || "-")}</p>
+              <p class="mt-2 text-sm text-zinc-600 leading-6">
+                Lahan ${angka(b["Luas_Lahan"])} m² · ${angka(b["Jumlah_Tanaman"])} tanaman ·
+                mulai ${esc(fmt(mulai))}${hari != null ? ` (${hari} hari)` : ""}
+              </p>
+              ${kabar}
+            </div>
+          </article>`;
+      }
+
+      async function muat() {
+        const wadah = document.getElementById("daftar");
+        try {
+          const [csv, foto] = await Promise.all([
+            fetch(CSV_URL).then((r) => {
+              if (!r.ok) throw new Error("CSV " + r.status);
+              return r.text();
+            }),
+            fetch(FOTO_URL)
+              .then((r) => r.json())
+              .catch(() => ({})),
+          ]);
+          const aktif = parseCSV(csv)
+            .filter(
+              (b) =>
+                b["Nama_Batch"] &&
+                !(b["Pemimpin Proyek"] || "").startsWith("⚠") &&
+                !selesai(b),
+            )
+            // kabar paling baru di atas; yang belum punya kabar di bawah
+            .sort(
+              (a, b) =>
+                (tgl(b["Status_Tanggal"]) || 0) -
+                (tgl(a["Status_Tanggal"]) || 0),
+            );
+
+          wadah.innerHTML = aktif.length
+            ? aktif.map((b) => kartu(b, foto)).join("")
+            : '<p class="py-10 text-zinc-500">Belum ada penanaman yang berjalan.</p>';
+
+          const terbaru = aktif
+            .map((b) => tgl(b["Status_Tanggal"]))
+            .filter(Boolean)
+            .sort((a, b) => b - a)[0];
+          if (terbaru)
+            document.getElementById("diperbarui").textContent =
+              "Kabar terakhir masuk " + fmt(terbaru);
+        } catch (e) {
+          console.error(e);
+          wadah.innerHTML =
+            '<p class="py-10 text-zinc-500">Data penanaman belum bisa dimuat. Silakan coba lagi nanti.</p>';
+        }
+      }
+      muat();
+    </script>
+  </body>
+</html>
