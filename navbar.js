@@ -4,7 +4,7 @@
   const MENU = [
     { label: "Beranda", href: "index.html" },
     { label: "Petani Sembada Farm", href: "petani.html" },
-    { label: "Penanaman Saat ini", href: "penanaman.html" },
+    { label: "Penanaman Saat ini", href: "Penanaman.html" },
     { label: "Produk", href: "index.html#produk" },
     { label: "Kontak", href: "index.html#kontak" },
   ];
