@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Produk – Sembada Farm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { "sembada-green": "#14532d", "sembada-brown": "#78350f" },
+          },
+        },
+      };
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-[#F9FAF6]">
+    <div id="navbar"></div>
+    <script src="navbar.js"></script>
+
+    <main
+      id="produk"
+      class="relative min-h-[calc(100vh-68px)] bg-[#F9FAF6] bg-cover bg-center"
+      style="background-image: url(&quot;image/LatarSayur.jpg&quot;)"
+    >
+      <div
+        class="absolute inset-0 bg-gradient-to-r from-[#F9FAF6]/10 via-[#F9FAF6]/50 to-[#F9FAF6]/90"
+      ></div>
+      <div class="relative max-w-5xl mx-auto px-4 sm:px-6 py-10 lg:py-14">
+        <div
+          class="bg-white/95 rounded-[28px] sm:rounded-[44px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.25)] ring-1 ring-black/5 p-6 sm:p-10"
+        >
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-sembada-green">
+            Produk
+          </h1>
+          <p class="mt-2 text-zinc-600 max-w-xl">
+            Hasil panen dari penanaman bersama para petani mitra, dari lahan
+            sampai dikirim ke pembeli.
+          </p>
+          <div id="isi" class="mt-8">
+            <p class="py-10 text-zinc-500">Memuat data produk…</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      /* ===== PENGATURAN (sama dengan halaman lain) ===== */
+      const CSV_URL =
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgQ-4PaMfk81DDWG7TieJs8dJJG01rNUXTmvkEmLeu0YE7KUYfIeJ9cybslgZBbQDz_pVuEI91_Dux/pub?gid=116994059&single=true&output=csv";
+      // URL web app Apps Script (foto). Isi setelah deploy; kosong = tampil inisial nama
+      const FOTO_URL =
+        "https://script.google.com/macros/s/AKfycbxb-v_NTC0SrJVwFzfZr1ZqQTI7q00tNqn9dRv9TFMVgo74Pe4cbkeTUA5lW5PdS8pE/exec";
+
+      const NAMA_PRODUK = "Benih Kacang Panjang";
+      const DESKRIPSI_PRODUK =
+        "Benih kacang panjang hasil kemitraan petani Sembada Farm. Dipanen bertahap, dikeringkan, lalu dikirim ke pembeli setelah memenuhi syarat mutu.";
+
+      /* ===== PEMBACA CSV ===== */
+      function parseCSV(text) {
+        const rows = [];
+        let row = [],
+          cell = "",
+          q = false;
+        for (let i = 0; i < text.length; i++) {
+          const c = text[i];
+          if (q) {
+            if (c === '"' && text[i + 1] === '"') {
+              cell += '"';
+              i++;
+            } else if (c === '"') q = false;
+            else cell += c;
+          } else if (c === '"') q = true;
+          else if (c === ",") {
+            row.push(cell);
+            cell = "";
+          } else if (c === "\n" || c === "\r") {
+            if (c === "\r" && text[i + 1] === "\n") i++;
+            row.push(cell);
+            rows.push(row);
+            row = [];
+            cell = "";
+          } else cell += c;
+        }
+        if (cell !== "" || row.length) {
+          row.push(cell);
+          rows.push(row);
+        }
+        const head = rows.shift().map((h) => h.trim());
+        return rows
+          .filter((r) => r.some((v) => v.trim() !== ""))
+          .map((r) =>
+            Object.fromEntries(head.map((h, i) => [h, (r[i] || "").trim()])),
+          );
+      }
+
+      /* ===== BANTUAN ===== */
+      const esc = (s) =>
+        String(s ?? "").replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[m],
+        );
+      const num = (v) => {
+        v = String(v || "").trim();
+        if (!v) return 0;
+        const n = Number(v.includes(",") ? v.replace(",", ".") : v);
+        return isNaN(n) ? 0 : n;
+      };
+      const kg = (n) => n.toLocaleString("id-ID", { maximumFractionDigits: 2 });
+      function tgl(v) {
+        v = (v || "").trim();
+        let m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (m) return new Date(+m[3], +m[1] - 1, +m[2]);
+        m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+        if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+        if (/^\d{5}(\.\d+)?$/.test(v))
+          return new Date(1899, 11, 30 + Math.floor(+v));
+        return null;
+      }
+      const fmt = (d) =>
+        d
+          ? d.toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })
+          : "-";
+      const fmtPendek = (d) =>
+        d
+          ? d.toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })
+          : "-";
+      const fotoUrl = (path, map) => {
+        const f = (path || "").split("/").pop();
+        return f && map[f] ? map[f] : "";
+      };
+
+      function gambar(url, alt, inisial, kelas) {
+        const i = esc(inisial);
+        return url
+          ? `<img src="${esc(url)}" alt="${esc(alt)}" loading="lazy" referrerpolicy="no-referrer" class="${kelas} object-cover"
+               onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${i}',className:'text-4xl font-extrabold text-sembada-green'}))" />`
+          : `<span class="text-4xl font-extrabold text-sembada-green">${i}</span>`;
+      }
+
+      const stat = (angka, label) =>
+        `<div class="rounded-2xl bg-[#F0F7F2] p-4"><p class="text-2xl font-extrabold text-sembada-green">${angka}</p><p class="text-sm text-zinc-600">${label}</p></div>`;
+
+      function kartuBatch(b, fotoMap) {
+        const nama = (b["Nama_Batch"] || "").replace(/^\d+\.\s*/, "");
+        const f = fotoUrl(b["Panen_Foto"], fotoMap);
+        const kirimKg = num(b["Kirim_Kg"]),
+          kirimN = num(b["Kirim_Jumlah"]);
+        return `
+          <article class="py-6 first:pt-0 last:pb-0 flex gap-5">
+            <div class="shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-[#F0F7F2] flex items-center justify-center">
+              ${gambar(f, "Hasil panen " + nama, nama.charAt(0).toUpperCase(), "w-full h-full")}
+            </div>
+            <div class="min-w-0 flex-1">
+              <h3 class="font-extrabold text-sembada-green">${esc(nama)}</h3>
+              <p class="text-sm text-zinc-500">${esc(b["Pemimpin Proyek"] || "")}</p>
+              <p class="mt-2 text-sm text-zinc-700 leading-6">
+                Dipanen ${num(b["Panen_Jumlah"])} kali, ${esc(fmtPendek(tgl(b["Panen_Mulai"])))} sampai ${esc(fmtPendek(tgl(b["Panen_Akhir"])))}.
+                Total panen basah ${kg(num(b["Panen_Kg"]))} kg.
+              </p>
+              ${kirimN ? `<p class="mt-1 text-sm text-zinc-700 leading-6">Benih kering terkirim <span class="font-bold">${kg(kirimKg)} kg</span> dalam ${kirimN} pengiriman.</p>` : ""}
+            </div>
+          </article>`;
+      }
+
+      async function muat() {
+        const wadah = document.getElementById("isi");
+        try {
+          const [csv, foto] = await Promise.all([
+            fetch(CSV_URL).then((r) => {
+              if (!r.ok) throw new Error("CSV " + r.status);
+              return r.text();
+            }),
+            fetch(FOTO_URL)
+              .then((r) => r.json())
+              .catch(() => ({})),
+          ]);
+          const batch = parseCSV(csv)
+            .filter((b) => b["Nama_Batch"] && num(b["Panen_Jumlah"]) > 0)
+            .sort(
+              (a, b) =>
+                (tgl(b["Panen_Akhir"]) || 0) - (tgl(a["Panen_Akhir"]) || 0),
+            );
+
+          if (!batch.length) {
+            wadah.innerHTML =
+              '<p class="py-10 text-zinc-500">Belum ada hasil panen yang bisa ditampilkan.</p>';
+            return;
+          }
+
+          const totalKg = batch.reduce((a, b) => a + num(b["Kirim_Kg"]), 0);
+          const totalKirim = batch.reduce(
+            (a, b) => a + num(b["Kirim_Jumlah"]),
+            0,
+          );
+          const terakhir = batch
+            .map((b) => tgl(b["Kirim_Terakhir"]))
+            .filter(Boolean)
+            .sort((a, b) => b - a)[0];
+          // foto produk = foto panen paling baru yang ada gambarnya
+          const fotoHero =
+            batch.map((b) => fotoUrl(b["Panen_Foto"], foto)).find(Boolean) ||
+            "";
+
+          wadah.innerHTML = `
+            <section class="flex flex-col sm:flex-row gap-6 sm:gap-8">
+              <div class="shrink-0 w-full h-56 sm:w-56 sm:h-56 rounded-2xl overflow-hidden bg-[#F0F7F2] flex items-center justify-center">
+                ${gambar(fotoHero, NAMA_PRODUK, "B", "w-full h-full")}
+              </div>
+              <div class="min-w-0 flex-1">
+                <h2 class="text-xl font-extrabold text-sembada-green">${esc(NAMA_PRODUK)}</h2>
+                <p class="mt-2 text-zinc-600 leading-7">${esc(DESKRIPSI_PRODUK)}</p>
+                <div class="mt-5 grid grid-cols-2 gap-3">
+                  ${stat(kg(totalKg) + " kg", "benih kering terkirim")}
+                  ${stat(totalKirim, "pengiriman" + (terakhir ? ", terakhir " + esc(fmtPendek(terakhir)) : ""))}
+                </div>
+              </div>
+            </section>
+
+            <section class="mt-10">
+              <h2 class="text-lg font-extrabold text-sembada-green">Asal produksi</h2>
+              <p class="text-sm text-zinc-500 mb-5">Penanaman yang menghasilkan produk ini. Berat panen basah lebih besar dari berat kering karena benih dikeringkan dulu.</p>
+              <div class="divide-y divide-zinc-100">${batch.map((b) => kartuBatch(b, foto)).join("")}</div>
+            </section>`;
+        } catch (e) {
+          console.error(e);
+          wadah.innerHTML =
+            '<p class="py-10 text-zinc-500">Data produk belum bisa dimuat. Silakan coba lagi nanti.</p>';
+        }
+      }
+      muat();
+    </script>
+  </body>
+</html>
